@@ -57,7 +57,7 @@ def add_transaction(recipient, sender = owner, amount = 1.0):
         'recipient' : recipient, 
         'amount' : amount
     }
-    if verify_transaction(transaction) : 
+    if verify_transaction(transaction): 
         open_transactions.append(transaction)
         participants.add(sender) #with a set if we add a name which already exists, nothing happend
         participants.add(recipient)
@@ -73,6 +73,7 @@ def mine_block():
         value = last_block[key]
         hashed_block += str(value) """
 
+    copied_transactions = open_transactions[:] #here we can copy all the open transaction thaks to [:]
     reward_transaction = { #to reward mining 
         'sender' : 'MINING',
         'recipient':  owner,
@@ -84,7 +85,7 @@ def mine_block():
     block = {
         'previous_hash': hashed_block, 
         'index': len(blockchain), 
-        'transactions': open_transactions
+        'transactions': copied_transactions
         }
     blockchain.append(block)
     return True 
@@ -120,6 +121,9 @@ def verify_chain():
                 return False
     return True
 
+def verify_transactions():
+    return all([verify_transaction(tx) for tx in open_transactions])
+
 
 waiting_for_input = True
 while waiting_for_input:
@@ -128,6 +132,7 @@ while waiting_for_input:
     print('2: Mine a new block ')
     print('3: Output the blockchain blocks ')
     print('4: Output participants ')
+    print('5: Check transaction validity ')
     print('h: Manipulate the chain')
     print('q: Quit')
     user_choice = get_user_choice()
@@ -147,6 +152,11 @@ while waiting_for_input:
         print_blockchain()
     elif user_choice == '4' :
         print(participants)
+    elif user_choice == '5' :
+        if verify_transactions():
+            print("All transactions are valid")
+        else : 
+            print("There are invalid transactions")
     elif user_choice == 'h':
         # Make sure that you don't try to "hack" the blockchain if it's empty 
         if len(blockchain) >= 1:
