@@ -1,5 +1,5 @@
 # Definition of the list blockchain and of the genesis block 
-MINING_REWARD = 10
+mining_reward = 10
 
 genesis_block = {
         'previous_hash': '', 
@@ -72,14 +72,13 @@ def mine_block():
     """ for key in last_block:
         value = last_block[key]
         hashed_block += str(value) """
-
-    copied_transactions = open_transactions[:] #here we can copy all the open transaction thaks to [:]
     reward_transaction = { #to reward mining 
         'sender' : 'MINING',
         'recipient':  owner,
-        'amount' : MINING_REWARD
+        'amount' : mining_reward
     }
-    open_transactions.append(reward_transaction)
+    copied_transactions = open_transactions[:] #here we can copy all the open transaction thaks to [:]
+    copied_transactions.append(reward_transaction)
 
     # hashing algorithm
     block = {
@@ -174,9 +173,8 @@ while waiting_for_input:
         print("Invald Blockchain")
         print_blockchain()
         break
-    print(get_balance('Max'))
+    print('Balance of {}: {:6.2f}'.format('Max', get_balance('Max')))# format the amount to 6 digits and 2 after point
 else: 
     print('User left!')
-
 
 
