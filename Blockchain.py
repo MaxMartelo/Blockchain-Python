@@ -181,3 +181,5 @@ while waiting_for_input:
     print('Balance of {}: {:6.2f}'.format('Max', get_balance('Max')))# format the amount to 6 digits and 2 after point
 else:
     print('User left!')
+
+#this is a test
