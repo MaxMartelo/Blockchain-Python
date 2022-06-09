@@ -2,6 +2,7 @@ import functools
 import hashlib as hl
 from collections import OrderedDict
 import json
+import pickle
 
 from hash_util import hash_string_256, hash_block
 
@@ -24,30 +25,37 @@ participants = {'Max'} # At the beginning, I am the only participant
 def load_data():
     """read the file containing the data of the blockchain
     """
-    with open('blockchain.txt', mode='r') as f:
-        file_content = f.readlines()
+    with open('blockchain.p', mode='rb') as f: #.txt for json and .p for pickle, r for json and rb for pickle
+        file_content = pickle.loads(f.read())#use pickle.loads to load when using pickle
         global blockchain #tells to the algo that the function behind are the global function and not something else 
         global open_transactions
-        blockchain = json.loads(file_content[0] [:-1]) #convert a string json format into a json, we use :-1 to not read the \n
-        updated_blockchain = []
-        for block in blockchain:
-            updated_block = {
-                'previous_hash': block['previous_hash'],
-                'index': block['index'],
-                'proof': block['proof'],
-                'transactions': [OrderedDict(
-                    [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
-            }
-            updated_blockchain.append(updated_block)
-        blockchain = updated_blockchain
+        blockchain = file_content['chain']
+        open_transactions = file_content['ot']
 
-        open_transactions = json.loads(file_content[1])
-        updated_transactions =[]
-        for tx in open_transactions:
-            updated_transaction = OrderedDict(
-                    [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])])
-            updated_transactions.append(updated_transaction)
-        open_transactions = updated_transactions
+        # using json : 
+        # file_content = f.readlines()
+        # global blockchain #tells to the algo that the function behind are the global function and not something else 
+        # global open_transactions
+        # blockchain = json.loads(file_content[0] [:-1]) #convert a string json format into a json, we use :-1 to not read the \n
+        # updated_blockchain = []
+        # for block in blockchain:
+        #     updated_block = {
+        #         'previous_hash': block['previous_hash'],
+        #         'index': block['index'],
+        #         'proof': block['proof'],
+        #         'transactions': [OrderedDict(
+        #             [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
+        #     }
+        #     updated_blockchain.append(updated_block)
+        # blockchain = updated_blockchain
+
+        # open_transactions = json.loads(file_content[1])
+        # updated_transactions =[]
+        # for tx in open_transactions:
+        #     updated_transaction = OrderedDict(
+        #             [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])])
+        #     updated_transactions.append(updated_transaction)
+        # open_transactions = updated_transactions
 
 
 load_data()
@@ -56,10 +64,16 @@ load_data()
 def save_data():
     """save_data function : opens a file blockchain.txt and write in it so that if we shut down the blockchain, we do not lose any information
     """
-    with open('blockchain.txt', mode='w') as f:
-        f.write(json.dumps(blockchain)) #convert my list(blockchain) into a str as a json format : it is different than doing str(blockchain)
-        f.write('\n')
-        f.write(json.dumps(open_transactions)) 
+    with open('blockchain.p', mode='wb') as f: # .txt for json and .p for pickle, w for json and wb for pickle
+        # f.write(json.dumps(blockchain)) #convert my list(blockchain) into a str as a json format : it is different than doing str(blockchain)
+        # f.write('\n')
+        # f.write(json.dumps(open_transactions)) 
+        save_data = {
+            'chain': blockchain,
+            'ot': open_transactions
+        }
+        f.write(pickle.dumps(save_data)) #use pickle to convert into binary data 
+        
 
 
 def valid_proof(transactions, last_hash, proof): 
