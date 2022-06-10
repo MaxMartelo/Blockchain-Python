@@ -9,15 +9,7 @@ from hash_util import hash_string_256, hash_block
 
 # Definition of the list blockchain and of the genesis block
 mining_reward = 10
-
-#genesis block is the first block created by the blockchain
-genesis_block = {
-        'previous_hash': '',
-        'index': 0,
-        'transactions': [],
-        'proof': 100
-        }
-blockchain = [genesis_block]
+blockchain = [] #initialized blockchain in our load_data fn 
 open_transactions = []
 owner = 'Max' # In realty it is a pseudo like zorufdshfdhgnsdoiusjd
 participants = {'Max'} # At the beginning, I am the only participant
@@ -25,38 +17,51 @@ participants = {'Max'} # At the beginning, I am the only participant
 def load_data():
     """read the file containing the data of the blockchain
     """
-    with open('blockchain.txt', mode='r') as f: #.txt for json and .p for pickle, r for json and rb for pickle
-        #using json : 
-        file_content = f.readlines()
-        global blockchain #tells to the algo that the function behind are the global function and not something else 
-        global open_transactions
-        blockchain = json.loads(file_content[0] [:-1]) #convert a string json format into a json, we use :-1 to not read the \n
-        updated_blockchain = []
-        for block in blockchain:
-            updated_block = {
-                'previous_hash': block['previous_hash'],
-                'index': block['index'],
-                'proof': block['proof'],
-                'transactions': [OrderedDict(
-                    [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
-            }
-            updated_blockchain.append(updated_block)
-        blockchain = updated_blockchain
+    global blockchain #tells to the algo that the function behind are the global function and not something else 
+    global open_transactions
+    try: #to handle exception with except
+        with open('blockchain.txt', mode='r') as f: #.txt for json and .p for pickle, r for json and rb for pickle
+            #using json : 
+            file_content = f.readlines()
+            blockchain = json.loads(file_content[0] [:-1]) #convert a string json format into a json, we use :-1 to not read the \n
+            updated_blockchain = []
+            for block in blockchain:
+                updated_block = {
+                    'previous_hash': block['previous_hash'],
+                    'index': block['index'],
+                    'proof': block['proof'],
+                    'transactions': [OrderedDict(
+                        [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
+                    }
+                updated_blockchain.append(updated_block)
+            blockchain = updated_blockchain
 
-        open_transactions = json.loads(file_content[1])
-        updated_transactions =[]
-        for tx in open_transactions:
-            updated_transaction = OrderedDict(
-                    [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])])
-            updated_transactions.append(updated_transaction)
-        open_transactions = updated_transactions
+            open_transactions = json.loads(file_content[1])
+            updated_transactions =[]
+            for tx in open_transactions:
+                updated_transaction = OrderedDict(
+                        [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])])
+                updated_transactions.append(updated_transaction)
+            open_transactions = updated_transactions
 
-        #using pickle
-        # file_content = pickle.loads(f.read())#use pickle.loads to load when using pickle
-        # global blockchain #tells to the algo that the function behind are the global function and not something else 
-        # global open_transactions
-        # blockchain = file_content['chain']
-        # open_transactions = file_content['ot']
+            #using pickle
+            # file_content = pickle.loads(f.read())#use pickle.loads to load when using pickle
+            # global blockchain #tells to the algo that the function behind are the global function and not something else 
+            # global open_transactions
+            # blockchain = file_content['chain']
+            # open_transactions = file_content['ot']
+
+    except IOError: #can have different type error like ValueError 
+        #genesis block is the first block created by the blockchain
+        genesis_block = {
+                'previous_hash': '',
+                'index': 0,
+                'transactions': [],
+                'proof': 100
+                }
+
+        blockchain = [genesis_block]
+        open_transactions = []
 
 
 load_data()
@@ -65,18 +70,21 @@ load_data()
 def save_data():
     """save_data function : opens a file blockchain.txt and write in it so that if we shut down the blockchain, we do not lose any information
     """
-    with open('blockchain.txt', mode='w') as f: # .txt for json and .p for pickle, w for json and wb for pickle
-        #using json
-        f.write(json.dumps(blockchain)) #convert my list(blockchain) into a str as a json format : it is different than doing str(blockchain)
-        f.write('\n')
-        f.write(json.dumps(open_transactions)) 
+    try:
+        with open('blockchain.txt', mode='w') as f: # .txt for json and .p for pickle, w for json and wb for pickle
+            #using json
+            f.write(json.dumps(blockchain)) #convert my list(blockchain) into a str as a json format : it is different than doing str(blockchain)
+            f.write('\n')
+            f.write(json.dumps(open_transactions)) 
 
-        #using pickle
-        # save_data = {
-        #     'chain': blockchain,
-        #     'ot': open_transactions
-        # }
-        # f.write(pickle.dumps(save_data)) #use pickle to convert into binary data 
+            #using pickle
+            # save_data = {
+            #     'chain': blockchain,
+            #     'ot': open_transactions
+            # }
+            # f.write(pickle.dumps(save_data)) #use pickle to convert into binary data 
+    except IOError:
+        print('saving failed!')
         
 
 
