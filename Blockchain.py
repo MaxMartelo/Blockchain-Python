@@ -20,9 +20,20 @@ class Blockchain:
         #initialized our blockchain list
         self.chain = [genesis_block]
         #Unhandled transactions
-        self.open_transactions = []
+        self.__open_transactions = []
         self.load_data()
         self.hosting_node = hosting_node_id
+
+    @property #creation of getter
+    def chain(self):
+        return self.__chain[:]
+
+    @chain.setter #creation of a setter
+    def chain(self, val):
+        self.__chain = val
+
+    def get_open_transactions(self):
+        return self.__open_transactions[:]
 
 # owner = 'Max' # In realty it is a pseudo like zorufdshfdhgnsdoiusjd
 # participants = {'Max'} # At the beginning, I am the only participant
@@ -59,7 +70,7 @@ class Blockchain:
                 for tx in open_transactions:
                     updated_transaction = Transaction(tx['sender'], tx['recipient'], tx['amount'])
                     updated_transactions.append(updated_transaction)
-                self.open_transactions = updated_transactions #to store the loaded transactions
+                self.__open_transactions = updated_transactions #to store the loaded transactions
 
                 #using pickle
                 # file_content = pickle.loads(f.read())#use pickle.loads to load when using pickle
@@ -80,11 +91,11 @@ class Blockchain:
         """
         try:
             with open('blockchain.txt', mode='w') as f: # .txt for json and .p for pickle, w for json and wb for pickle
-                saveable_chain = [block.__dict__ for block in [Block(block_el.index, block_el.previous_hash, [tx.__dict__ for tx in block_el.transactions], block_el.proof, block_el.timestamp) for block_el in self.chain]]
+                saveable_chain = [block.__dict__ for block in [Block(block_el.index, block_el.previous_hash, [tx.__dict__ for tx in block_el.transactions], block_el.proof, block_el.timestamp) for block_el in self.__chain]]
                 #using json
                 f.write(json.dumps(saveable_chain)) #convert my list(blockchain) into a str as a json format : it is different than doing str(blockchain)
                 f.write('\n')
-                saveable_tx = [tx.__dict__ for tx in self.open_transactions]
+                saveable_tx = [tx.__dict__ for tx in self.__open_transactions]
                 f.write(json.dumps(saveable_tx)) 
 
                 #using pickle
@@ -101,12 +112,11 @@ class Blockchain:
     def proof_of_work(self):
         """maj of the proof number : here it is an instance method
         """
-        last_block = self.chain[-1]
+        last_block = self.__chain[-1]
         last_hash = hash_block(last_block)
         proof = 0
         #try different PoW numbers and return the first valid one
-        verifier = Verification()
-        while not verifier.valid_proof(self.open_transactions, last_hash, proof):
+        while not Verification.valid_proof(self.__open_transactions, last_hash, proof):
             proof += 1
         return proof 
 
@@ -124,11 +134,11 @@ class Blockchain:
         participant = self.hosting_node
         #Fetch a list of all sent coin amounts for the given person 
         #This fetches sent amounts of transactions that were already included in block
-        tx_sender = [[tx.amount for tx in block.transactions if tx.sender == participant] for block in self.chain] #return amount send in the previous block
+        tx_sender = [[tx.amount for tx in block.transactions if tx.sender == participant] for block in self.__chain] #return amount send in the previous block
 
         #Fetch a list of all sent coin amounts for the given person 
         #This fetches sent amounts of open transactions (to avoid double spend)
-        open_tx_sender = [tx.amount for tx in self.open_transactions if tx.sender == participant] #return the amount send in the open_transaction list
+        open_tx_sender = [tx.amount for tx in self.__open_transactions if tx.sender == participant] #return the amount send in the open_transaction list
         tx_sender.append(open_tx_sender)
 
         amount_sent = functools.reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else tx_sum + 0, tx_sender, 0) #equivalent to lines behind
@@ -137,7 +147,7 @@ class Blockchain:
         #     if len(tx) > 0:
         #          amount_sent += tx[0]
 
-        tx_recipient = [[tx.amount for tx in block.transactions if tx.recipient == participant] for block in self.chain]
+        tx_recipient = [[tx.amount for tx in block.transactions if tx.recipient == participant] for block in self.__chain]
 
         amount_received = functools.reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else tx_sum + 0, tx_recipient, 0) #reducing lines behind : sum(tx_amt) => to sum all the transactions made  
         # amount_received = 0
@@ -151,9 +161,9 @@ class Blockchain:
 
     def get_last_blockchain_value(self):
         """Returns the last value of the current blockchain."""
-        if len(self.chain) < 1 : # Case where the blockchain is empty
+        if len(self.__chain) < 1 : # Case where the blockchain is empty
             return None
-        return self.chain[-1]
+        return self.__chain[-1]
 
 
     def add_transaction(self, recipient, sender, amount = 1.0):
@@ -170,10 +180,8 @@ class Blockchain:
         #     'amount' : amount
         # }
         transaction = Transaction(sender, recipient, amount)
-    
-        verifier = Verification()
-        if verifier.verify_transaction(transaction, self.get_balance):
-            self.open_transactions.append(transaction)
+        if Verification.verify_transaction(transaction, self.get_balance):
+            self.__open_transactions.append(transaction)
             self.save_data() #to save the block into a file
             return True
         return False
@@ -181,7 +189,7 @@ class Blockchain:
 
     def mine_block(self):
         """Create a new block and add open transactions to it."""
-        last_block = self.chain [-1] # Blockchain [-1] gives us the last element of the blockchain
+        last_block = self.__chain [-1] # Blockchain [-1] gives us the last element of the blockchain
         hashed_block = hash_block(last_block) # it is the same as our for loop behind
         proof = self.proof_of_work() #give us a number for a valid hash
         # for is used to convert last_block into  a hashed_block as a string so that we can read it
@@ -197,21 +205,21 @@ class Blockchain:
         # we need to have an ordered dict of reward transaction otherwise it can change the hash of the PoW and lead to an error
         reward_transaction = Transaction('MINING', self.hosting_node, mining_reward)
         #here we can copy all the open transaction thaks to [:] 
-        copied_transactions = self.open_transactions[:] 
+        copied_transactions = self.__open_transactions[:] 
         copied_transactions.append(reward_transaction)
 
 
         # hashing algorithm
-        block = Block(len(self.chain), hashed_block, copied_transactions, proof)
+        block = Block(len(self.__chain), hashed_block, copied_transactions, proof)
         # block = {
         #     'previous_hash': hashed_block,
         #     'index': len(blockchain),
         #     'transactions': copied_transactions,
         #     'proof': proof
         #     }
-        self.chain.append(block)
+        self.__chain.append(block)
         #reset my open transactions
-        self.open_transactions = []
+        self.__open_transactions = []
         self.save_data()
 
         return True
