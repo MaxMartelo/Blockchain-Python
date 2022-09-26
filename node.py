@@ -2,7 +2,7 @@ from uuid import uuid4 #to generate unique ID
 
 from Blockchain import Blockchain
 
-from verification import Verification
+from utility.verification import Verification
 class Node: 
     def __init__(self):
         """Constructor of node class

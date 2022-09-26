@@ -1,4 +1,4 @@
-from hash_util import hash_string_256, hash_block
+from utility.hash_util import hash_string_256, hash_block
 
 class Verification:
     # It's not accessing anything from the class so great use case for static method
@@ -50,7 +50,7 @@ class Verification:
     @classmethod
     def verify_transactions(cls, open_transactions, get_balance):
         """verify all open transactions."""
-        return all([self.verify_transaction(tx, get_balance) for tx in open_transactions])
+        return all([cls.verify_transaction(tx, get_balance) for tx in open_transactions])
 
 
    
