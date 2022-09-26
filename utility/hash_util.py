@@ -1,6 +1,7 @@
 import hashlib as hl
 import json
 
+# __all__ = ['hash_string_256', 'hash_block'] : to kind of make the other import kind of private
 
 def hash_string_256(string):
     """Create a SHA256 hash for a given input string

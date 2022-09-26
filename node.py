@@ -86,6 +86,8 @@ class Node:
             print('User left!')
 
 
-#to start the program
-node = Node()
-node.listen_for_input()
+if __name__ == '__main__':
+    #to start the program
+    node = Node()
+    node.listen_for_input()
+
